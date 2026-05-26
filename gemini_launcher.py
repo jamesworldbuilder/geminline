@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import sys
 import fnmatch
@@ -162,6 +163,20 @@ def load_ai_instructions():
     with open(instructions_path, 'r', encoding='utf-8') as f:
         return f.read().strip()
 
+def parse_identity_profile(instructions_text):
+    """Parses the customized identity moniker and background details out of the instruction text blocks"""
+    profile = {"name": "Gem", "background": "the Jim in me"}
+    for line in instructions_text.splitlines():
+        if line.startswith("NAME="):
+            val = line.split("=")[1].strip()
+            if val:
+                profile["name"] = val
+        elif line.startswith("BACKGROUND="):
+            val = line.split("=")[1].strip()
+            if val:
+                profile["background"] = val
+    return profile
+
 def should_ignore(path, is_dir, ignore_config, root_dir):
     """Evaluates workspace assets against the loaded parsing rules"""
     rel_path = os.path.relpath(path, root_dir)
@@ -275,7 +290,18 @@ def analyze_workspace(root_dir, prompt, selected_model, no_search):
     ignore_config = load_gemignore(root_dir)
     
     print("Loading external AI instructions configuration found...")
-    system_instruction = load_ai_instructions()
+    raw_system_instruction = load_ai_instructions()
+    identity = parse_identity_profile(raw_system_instruction)
+    prompt_name = identity["name"]
+    
+    # Inject configuration variables into placeholders if string brackets are present
+    try:
+        system_instruction = raw_system_instruction.format(
+            AI_NAME=prompt_name,
+            AI_BACKGROUND=identity["background"]
+        )
+    except KeyError:
+        system_instruction = raw_system_instruction
     
     print(f"Scanning workspace in '{root_dir}'...")
     
@@ -298,7 +324,7 @@ def analyze_workspace(root_dir, prompt, selected_model, no_search):
         f"User Multi-Part Request: {prompt}"
     ]
     
-    print(f"Cyrus is analyzing your workspace via {selected_model}...")
+    print(f"{prompt_name} is analyzing your workspace via {selected_model}...")
     
     # Configure the generation options layout utilizing maximum token ceilings
     gen_config = types.GenerateContentConfig(
@@ -388,7 +414,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(
-        description="Scan workspace code assets and submit revision requests to Cyrus (Gemini)"
+        description="Scan workspace code assets and submit revision requests to Gemini"
     )
     
     # Configuration positional and modification argument configurations
