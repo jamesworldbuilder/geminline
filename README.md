@@ -12,9 +12,9 @@ A lightweight, command-line tool designed to scan your project's local code file
 
 ## Requirements
 
-- **Python**: Version 3.10 or higher is required to support modern standard library components and async processing pipelines[cite: 6].
-- **Pip Packages**: The official Google GenAI SDK library wrapper must be accessible within your runtime environment[cite: 6].
-  - *Installation*: Run the following command in your terminal interface before executing the utility[cite: 6]:
+- **Python**: Version 3.10 or higher is required to support modern standard library components and async processing pipelines.
+- **Pip Packages**: The official Google GenAI SDK library wrapper must be accessible within your runtime environment.
+  - *Installation*: Run the following command in your terminal interface before executing the utility:
 ```bash
     pip install google-genai
 ```
