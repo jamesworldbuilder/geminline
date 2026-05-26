@@ -1,0 +1,43 @@
+# ==============================================================================
+# .gemignore - Workspace Filtering Profiles
+# ==============================================================================
+
+[SPECIFIC FILES]
+.DS_Store
+gemini_launcher.py
+*~
+
+[SPECIFIC DIRECTORIES]
+.git
+__pycache__
+node_modules
+.venv
+venv
+.pytest_cache
+dist
+build
+
+[SPECIFIC FILE TYPES]
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tar.gz
+*.zip
+*.tmp
+*.tar
+*.zst
+*.deb
+*.tgz
+*.iso
+*.gz
+*.xz
+*.bz2
+*.lz4
+*.7z
+*.rar
+*.rpm
+*.vdi
+*.vmdk
+*.qcow2
+*.img
