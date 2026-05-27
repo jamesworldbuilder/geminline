@@ -59,63 +59,84 @@ To see how much space you have left in your rolling 60-second free bracket witho
 
 ## Example Output
 ```bash
-    geminline "Hey, Cyrus. Can you tell me what's in this folder?"`
+    geminline --targets ./static/js/sidebar-ui.js "In the transforms-timeline-panel, each object (i.e., each transforms-list-item) needs to have unique set_id and style_id values, which are also unique to each other. less-talk"
 ```
 ```bash
     === FREE TIER RUNTIME TELEMETRY ===
-    Requests (Last 60s): 0/15   (Headroom remaining: 15)
-    Tokens Used (Last 60s): 0/1,000,000 (Headroom remaining: 1,000,000)
+    Requests (Last 60s): 0/15  (Headroom remaining: 15)
+    Tokens Used (Last 60s): 0/1000000 (Headroom remaining: 1000000)
     Window State: Stable (Next token slot refresh calculation in: 0s)
     ===================================
-
+    
     Loading ignore configuration fields...
     Loading external AI instructions configuration found...
     Scanning workspace in '.'...
-    Cyrus is analyzing your workspace via gemini-3.5-flash...
+    Cyrus is analyzing your workspace via gemini-2.5-flash-lite...
     
     RESPONSE:
     
-    This workspace contains **clip-handler** (also referred to as **yt-factory**), a full-stack automated video editing, object tracking, and rendering pipeline. The system integrates a KonvaJS-based web editor, background rendering daemons, and computer vision APIs to track features, apply dynamic zoom filters, and compile final video renders.
+    ========================================
+    REVISION 1
+    ========================================
+    <target_file>./static/js/sidebar-ui.js</target_file>
     
-    An architectural breakdown of the workspace directories and files:
+    <original>
+    // generates four random characters and four random integers to fulfill split format requirements
+            const generateSplitId = () => {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+                let letterPart = ''
+                let numberPart = ''
+                for (let j = 0; j < 4; j++) {
+                    letterPart += chars[Math.floor(Math.random() * chars.length)]
+                    numberPart += chars[Math.floor(Math.random() * chars.length)]
+                }
+                return letterPart + numberPart
+            }
     
-    ### 1. Orchestration & Control
-    *   **`manage-factory.sh`**: A robust Bash automation script (`set -euo pipefail`) to start, stop, restart, and query the status of the background consumer and producer daemons. It manages process IDs via local `.pid` files.
+            // strictly enforces unique structural random suffixes if missing in state reference
+            if (!markerConfig.set_id) markerConfig.set_id = `set_${generateSplitId()}`
+            if (!markerConfig.style_id) markerConfig.style_id = `style_${generateSplitId()}`
+    </original>
     
-    ### 2. Backend Services & Daemons (`src/`)
-    *   **`editor_server.py`**: A Flask web server serving the frontend editor interface. It handles browser heartbeat monitoring (auto-terminating if the browser disconnects), processes simulated tracking payloads, and appends assembly tasks to the local queue.
-    *   **`producer.py`**: A daemonized background process that polls the task queue and executes localized FFmpeg pipelines on raw video clips.
-    *   **`consumer.py`**: A background service that processes tasks from the queue and renders final high-quality video files using FFmpeg.
-    *   **`shared_utils.py`**: Core utility library containing the mathematical logic to build dynamic FFmpeg `zoompan` filter chains based on object tracking coordinate maps.
+    <replacement>
+    // generates four random characters and four random integers to fulfill split format requirements
+            const generateSplitId = () => {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+                let result = ''
+                for (let i = 0; i < 8; i++) {
+                    result += chars[Math.floor(Math.random() * chars.length)]
+                }
+                return result
+            }
     
-    ### 3. CLI Tools & Authentication (`src/`)
-    *   **`fetch_clip.py`**: CLI utility that downloads specific video sections using `yt-dlp` and automatically launches the web browser to open the editor interface.
-    *   **`add_task.py`**: CLI utility to manually append video processing tasks to the queue.
-    *   **`auth_setup.py`**: Script to run the local OAuth2 flow to generate YouTube upload tokens.
+            // strictly enforces unique structural random suffixes if missing in state reference
+            // ensures set_id and style_id are unique from each other and across all transform elements
+            if (!markerConfig.set_id) {
+                let setId = `set_${generateSplitId()}`
+                let styleId = `style_${generateSplitId()}`
+                // Ensure set_id and style_id are unique
+                while (setId === styleId) {
+                    styleId = `style_${generateSplitId()}`
+                }
+                markerConfig.set_id = setId
+                markerConfig.style_id = styleId
+            } else if (!markerConfig.style_id) {
+                let styleId = `style_${generateSplitId()}`
+                // Ensure style_id is unique from the existing set_id
+                while (markerConfig.set_id === styleId) {
+                    styleId = `style_${generateSplitId()}`
+                }
+                markerConfig.style_id = styleId
+            }
+    </replacement>
     
-    ### 4. Frontend Editor Interface (`templates/` & `static/js/`)
-    *   **`templates/editor-ui.html`**: Semantic HTML5 layout for the video editor. It features a dark-themed workspace, responsive video wrapper, timeline scrubber, multi-track lane visualization, and a tabbed sidebar control panel.
-    *   **`static/js/main.js`**: Main frontend entry point. It coordinates event bindings, handles local file uploads, manages letterboxing/cropping UI states, and runs the main animation render loop.
-    *   **`static/js/canvas-engine.js`**: Core KonvaJS rendering engine. It manages the canvas stage, interactive transformers, cropping masks, letterboxing overlays, and grid rendering.
-    *   **`static/js/sidebar-ui.js`**: Complex UI controller managing layers, interactive timeline markers, caption groups, advanced transform configurations (exportable to JSON), and the tracking panel.
-    *   **`static/js/transport-controls.js`**: Implements video playback controls, custom timeline scrubbing, and hover tooltips.
-    *   **`static/js/state-manager.js`**: Centralized state container tracking active layers, selected nodes, and active layer IDs.
-    *   **`static/js/dom-elements.js`**: Cached DOM element references.
-    
-    ### 5. Computer Vision APIs (`comp-vision-api/`)
-    *   **`comp_vision_cpu.py`**: Flask API running YOLOv8 (ONNX) for object detection and Lucas-Kanade optical flow for tracking custom anchor features across extracted video frames.
-    *   **`comp_vision_gpu.py`**: Flask API running PyTorch-accelerated YOLOv8 tracking, exposed via ngrok with token-based authentication and usage quotas.
-    
-    ### 6. Configuration (`config/`)
-    *   **`client-secrets.json`**: Google API client credentials.
-    *   **`token.json`**: Active Google OAuth2 refresh and access tokens for YouTube uploads.
-    *   **`task-queue.json`**: Local JSON database storing the active queue of video rendering tasks.
     
     ========================================
-    Model Engine:      gemini-3.5-flash
-    Prompt Tokens:     181017
-    Output Tokens:     872
-    Total Session:     183059 tokens
-    Remaining Window: 816941 tokens (Max: 1000000)
+    Model Engine:     gemini-2.5-flash-lite
+    Prompt Tokens:    136872
+    Output Tokens:    604
+    Total Session:    137476 tokens
+    Remaining Window: 862524 tokens (Max: 1000000)
     ========================================
+
 ```
