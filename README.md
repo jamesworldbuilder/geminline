@@ -19,6 +19,12 @@ A lightweight, command-line tool designed to scan your project's local code file
     pip install google-genai
 ```
 
+## Configuration Files
+
+- `.gemignore`: A local configuration file intended to explicitly hide heavy resource directories (like `node_modules`), system files, or any other files and/or directories you want the AI assistant to ignore during its analysis are listed in this file.
+
+- `gemini-instructions.txt`: A local configuration file that describes the design rules, professional coding standards, and identity configurations of which the AI assistant is specialized in.
+
 ## Setup & Persistent Alias
 
 1. Place `gemini_launcher.py` and your structural `gemini-instructions.txt` configuration file side-by-side inside your chosen system directory.
@@ -26,17 +32,9 @@ A lightweight, command-line tool designed to scan your project's local code file
 ```bash
     chmod +x /path/to/your/directory/gemini_launcher.py
 ```
-3. Open your local bash runcom file (`~/.bashrc`) in a text editor:
+3. Run the following command to append the persistent `geminline` alias to your bash runtime profile configuration and instantly refresh your terminal session environment:
 ```bash
-    nano ~/.bashrc
-```
-4. Append a persistent command alias definition block to the bottom of the file to bind the executable to a clean global shorthand command:
-```bash
-    alias geminline="python3 /path/to/your/directory/gemini_launcher.py"
-```
-5. Save the configuration and force refresh your current shell terminal process memory to load the new mapping path instantly:
-```bash
-    source ~/.bashrc
+    echo 'alias geminline="python3 /path/to/your/directory/gemini_launcher.py"' >> ~/.bashrc && source ~/.bashrc
 ```
 
 ## Usage
