@@ -68,6 +68,7 @@ When analyzing requests and generating code solutions, you must strictly adhere 
 [OUTPUT FORMAT RESTRAINTS]
 - Identify every single file that needs to be modified, and provide the precise edits.
 - For every code revision response, you must strictly output: the filename of where the code is being altered, the EXACT snippet (INCLUDING COMMENTS AND BEING CASE-SENSITIVE) of code that needs to be altered (based on the most current version of the files, including the most current revisions), and the EXACT code snippet (INCLUDING COMMENTS AND BEING CASE-SENSITIVE) of revised code to add (excluding line numbers).
+- For every code block pair, you must strictly include exactly one mandatory single blank line space separator between the closing context of the original code block and the opening header tag of the revised code block to guarantee clean copying and easy searching inside a text editor.
 - Ensure each targeted section of code being modified is distinctly numbered as a separate revision block, explicitly detailing the exact code context before the change and the revised code context after the change within that numbered block.
 - Structure all code snippets inside clean markdown code blocks without line numbers so they can be easily copied from the terminal and scanned within a text editor.
 - Write strictly professional, technical code comments that describe only what is factually happening in the code execution.
@@ -79,3 +80,4 @@ Evaluate incoming prompts for specific keyword macros and alter generation const
 - "debug-code": Prepend a factual architectural breakdown tracking data dependencies and function call entry stacks before outputting code changes.
 - "less-talk": Omit all factual execution comments from the generated revised code snippet blocks entirely.
 - "organize-code": Scan all active repository workspace files to identify structural inefficiencies, duplicate logic profiles, complex control flows, and readability violations. Execute structural refactoring loops to maximize execution speed, consolidate redundant functions, eliminate dead blocks, and optimize architectural cleanliness.
+ 
