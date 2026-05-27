@@ -208,9 +208,34 @@ def should_ignore(path, is_dir, ignore_config, root_dir):
             
     return False
 
-def build_workspace_context(root_dir, ignore_config):
+def build_workspace_context(root_dir, ignore_config, explicit_targets=None):
     """Walks the directory and aggregates files into a single context string"""
     context_parts = []
+    target_list = [t.strip() for t in explicit_targets.split(",") if t.strip()] if explicit_targets else []
+    
+    # Generate structural workspace file tree layout map
+    structure_map = []
+    structure_map.append("=== REPOSITORY ARCHITECTURAL STRUCTURE & FILE SYSTEM MAP ===")
+    
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        # Prune ignored tracking targets dynamically in-place
+        dirnames[:] = [d for d in dirnames if not should_ignore(os.path.join(dirpath, d), True, ignore_config, root_dir)]
+        
+        rel_dir = os.path.relpath(dirpath, root_dir)
+        depth = 0 if rel_dir == "." else rel_dir.count(os.sep) + 1
+        indent = "  " * depth
+        
+        if rel_dir != ".":
+            structure_map.append(f"{indent}[DIR] {os.path.basename(dirpath)}/")
+            
+        for filename in filenames:
+            full_path = os.path.join(dirpath, filename)
+            if not should_ignore(full_path, False, ignore_config, root_dir):
+                file_indent = "  " * (depth + 1)
+                structure_map.append(f"{file_indent}[FILE] {filename}")
+                
+    structure_map.append("============================================================\n")
+    context_parts.append("\n".join(structure_map))
     
     for dirpath, dirnames, filenames in os.walk(root_dir):
         # Prune ignored tracking targets dynamically in-place
@@ -218,6 +243,7 @@ def build_workspace_context(root_dir, ignore_config):
         
         for filename in filenames:
             full_path = os.path.join(dirpath, filename)
+            rel_path = os.path.relpath(full_path, root_dir)
             if should_ignore(full_path, False, ignore_config, root_dir):
                 continue
                 
@@ -253,6 +279,11 @@ def build_workspace_context(root_dir, ignore_config):
                         print(f"  [Skipped by User Request] {full_path}")
                         continue
                         
+                    # If specific targets are provided, compress unrequested giant files to reference headers only
+                    if target_list and not any(fnmatch.fnmatch(rel_path, t) or fnmatch.fnmatch(filename, t) for t in target_list):
+                        context_parts.append(f"--- REFERENCE FILE: {full_path} (Contents omitted to conserve token window) ---")
+                        continue
+                        
                     with open(full_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                     # Append clear layout tags for contextual isolation boundaries
@@ -265,7 +296,7 @@ def build_workspace_context(root_dir, ignore_config):
                     
     return "\n".join(context_parts)
 
-def analyze_workspace(root_dir, prompt, selected_model, no_search):
+def analyze_workspace(root_dir, prompt, selected_model, no_search, targets_raw=""):
     """Sends the entire workspace and the user task to Gemini"""
     # Evaluate client-side rolling limits before calling the remote server
     pr_quota_metrics(display_only=False)
@@ -307,7 +338,7 @@ def analyze_workspace(root_dir, prompt, selected_model, no_search):
     
     # Safely isolate scanning tasks against abrupt halts or disk failures
     try:
-        workspace_context = build_workspace_context(root_dir, ignore_config)
+        workspace_context = build_workspace_context(root_dir, ignore_config, targets_raw)
     except KeyboardInterrupt:
         print("\nOperation cancelled (CTRL+C) during scanning phase")
         sys.exit(0)
@@ -476,4 +507,5 @@ if __name__ == "__main__":
         explicit_targets = f"\nCRITICAL: Focus your primary modifications on these specific files: {parsed_args.targets}\n"
         
     user_prompt = " ".join(instruction_list) + explicit_targets
-    analyze_workspace(target_dir, user_prompt, selected_model, no_search_flag)
+    analyze_workspace(target_dir, user_prompt, selected_model, no_search_flag, parsed_args.targets)
+    
