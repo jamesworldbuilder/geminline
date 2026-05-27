@@ -502,10 +502,17 @@ if __name__ == "__main__":
     selected_model = parsed_args.model
     no_search_flag = parsed_args.no_search
     
+    # Check if a target flag was provided; default to "none" if no args or a dot was sent
+    active_targets = parsed_args.targets
+    if not active_targets:
+        # Check if the remaining instructions are empty or just indicate the local directory root
+        remaining_str = " ".join(instruction_list).strip()
+        if not remaining_str or remaining_str == ".":
+            active_targets = "none"
+            
     explicit_targets = ""
-    if parsed_args.targets:
-        explicit_targets = f"\nCRITICAL: Focus your primary modifications on these specific files: {parsed_args.targets}\n"
+    if active_targets and active_targets != "none":
+        explicit_targets = f"\nCRITICAL: Focus your primary modifications on these specific files: {active_targets}\n"
         
     user_prompt = " ".join(instruction_list) + explicit_targets
-    analyze_workspace(target_dir, user_prompt, selected_model, no_search_flag, parsed_args.targets)
-    
+    analyze_workspace(target_dir, user_prompt, selected_model, no_search_flag, active_targets)
