@@ -491,7 +491,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model", 
-        default="gemini-3.5-flash", 
+        default="gemini-2.5-flash-lite", 
         help="Target model engine for generation"
     )
     parser.add_argument(
@@ -548,3 +548,4 @@ if __name__ == "__main__":
     formatting_reminder = "\nREMINDER: Separate code to alter (<<<<) and revised code (====) with exactly one empty blank line space\n"
     user_prompt = " ".join(instruction_list) + explicit_targets + formatting_reminder
     analyze_workspace(target_dir, user_prompt, selected_model, no_search_flag, active_targets)
+     
