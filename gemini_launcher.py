@@ -23,6 +23,15 @@ FREE_LIMITS = {
     'tokens': 1000000
 }
 
+# maps explicit model engines to their true developer tier tokens-per-minute (TPM) limits
+TOKEN_RPM_LIMITS = {
+    'gemini-3.5-flash': 1000000,
+    'gemini-2.5-flash-lite': 1000000,
+    'gemini-2.5-flash': 1000000,
+    'gemini-2.5-pro': 32000,
+    'gemini-3.1-pro': 32000
+}
+
 # defines structural schemas to guarantee output formatting layout shapes
 class CodeRevision(BaseModel):
     filename: str = Field(description="The relative file path being altered")
@@ -103,7 +112,10 @@ def pr_quota_metrics(display_only=False, active_model="gemini-2.5-flash-lite"):
     # pro tier constraints limit sliding execution rates down to 2 requests per minute
     rpm_max = 2 if active_model == "gemini-2.5-pro" else FREE_LIMITS['requests']
     req_left = max(0, rpm_max - req_count)
-    tokens_left = 0 if server_locked else max(0, FREE_LIMITS['tokens'] - token_count)
+    
+    # dynamically fetches the correct token cap per minute for the running engine tier
+    tpm_max = TOKEN_RPM_LIMITS.get(active_model, 1000000)
+    tokens_left = 0 if server_locked else max(0, tpm_max - token_count)
     
     cooldown = 0
     if active_window_logs:
@@ -119,7 +131,7 @@ def pr_quota_metrics(display_only=False, active_model="gemini-2.5-flash-lite"):
         print("Tokens Used (Last 60s): [429 RESOURCE_EXHAUSTED]")
         print("\n[ALERT] Quota ceiling breached - Cool-down lock active for another: " + str(cooldown) + "s")
     else:
-        print("Tokens Used (Last 60s): " + str(token_count) + "/" + str(FREE_LIMITS['tokens']) + " (Headroom remaining: " + str(tokens_left) + ")")
+        print("Tokens Used (Last 60s): " + str(token_count) + "/" + str(tpm_max) + " (Headroom remaining: " + str(tokens_left) + ")")
         if req_left == 0 or daily_left == 0:
             print("\n[ALERT] Quota ceiling breached - Cool-down lock active for another: " + str(cooldown) + "s")
         else:
@@ -524,6 +536,10 @@ def analyze_workspace(root_dir, prompt, selected_model, no_search, targets_raw="
         print("Model Engine:     " + selected_model)
         print("Token Metadata:   Unavailable for this transaction")
     print("="*40)
+    
+    # prints a final telemetry refresh update so you see your current usage balance change immediately
+    print("\nUPDATED TIER BALANCE:")
+    pr_quota_metrics(display_only=False, active_model=selected_model)
 
 if __name__ == "__main__":
     import argparse
