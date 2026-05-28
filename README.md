@@ -59,11 +59,21 @@ To see how much space you have left in your rolling 60-second free bracket witho
 
 ## Example Output
 ```bash
-    geminline --targets ./static/js/sidebar-ui.js "In the transforms-timeline-panel, each object (i.e., each transforms-list-item) needs to have unique set_id and style_id values, which are also unique to each other. less-talk"
+    geminline --targets ./static/js/sidebar-ui.js "In transforms-timeline-panel, let's make the following adjustments: 1.) If the set-transform-interval-btn is selected, then the parent transform-row should be automatically selected. 2.) When a transform-row is selected, the first transform-config-element in the transformations-matrix, within the selected transform-row, should be automatically selected/highlighted. Currently, selecting the transform-config-element auto-selects transform-row-1, instead of the current parent transform-row."
 ```
 ```bash
+    === SELECT ASSISTANT TIER ===
+    [1] Free Tier Assistant (gemini-2.5-flash-lite)
+    [2] Paid/Premium Pro Assistant (gemini-2.5-pro)
+    [3] Advanced Flash Assistant (gemini-3.5-flash)
+    Select an assistant option [1-3] (Default: 1): 3
+    Proceeding with engine configuration: gemini-3.5-flash
+    
+    
     === FREE TIER RUNTIME TELEMETRY ===
+    Active Model Engine: gemini-3.5-flash
     Requests (Last 60s): 0/15  (Headroom remaining: 15)
+    Daily Quota Used:    2/1500  (Daily remaining: 1498)
     Tokens Used (Last 60s): 0/1000000 (Headroom remaining: 1000000)
     Window State: Stable (Next token slot refresh calculation in: 0s)
     ===================================
@@ -71,7 +81,7 @@ To see how much space you have left in your rolling 60-second free bracket witho
     Loading ignore configuration fields...
     Loading external AI instructions configuration found...
     Scanning workspace in '.'...
-    Cyrus is analyzing your workspace via gemini-2.5-flash-lite...
+    Cyrus is analyzing your codebase and generating revisions...
     
     RESPONSE:
     
@@ -81,62 +91,133 @@ To see how much space you have left in your rolling 60-second free bracket witho
     <target_file>./static/js/sidebar-ui.js</target_file>
     
     <original>
-    // generates four random characters and four random integers to fulfill split format requirements
-            const generateSplitId = () => {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-                let letterPart = ''
-                let numberPart = ''
-                for (let j = 0; j < 4; j++) {
-                    letterPart += chars[Math.floor(Math.random() * chars.length)]
-                    numberPart += chars[Math.floor(Math.random() * chars.length)]
+    // dynamically sets active node and refreshes properties UI panels on single click
+            row.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT' || e.target.closest('.transform-interval-timing')) return
+                
+                const rowsContainer = document.getElementById('transforms-rows')
+                if (rowsContainer) {
+                    Array.from(rowsContainer.children).forEach(r => r.style.borderLeftColor = 'transparent')
                 }
-                return letterPart + numberPart
-            }
-    
-            // strictly enforces unique structural random suffixes if missing in state reference
-            if (!markerConfig.set_id) markerConfig.set_id = `set_${generateSplitId()}`
-            if (!markerConfig.style_id) markerConfig.style_id = `style_${generateSplitId()}`
+                row.style.borderLeftColor = '#00a8ff'
     </original>
     
     <replacement>
-    // generates four random characters and four random integers to fulfill split format requirements
-            const generateSplitId = () => {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-                let result = ''
-                for (let i = 0; i < 8; i++) {
-                    result += chars[Math.floor(Math.random() * chars.length)]
+    // dynamically sets active node and refreshes properties UI panels on single click
+            row.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT' || e.target.closest('.transform-interval-timing')) return
+                
+                const rowsContainer = document.getElementById('transforms-rows')
+                if (rowsContainer) {
+                    Array.from(rowsContainer.children).forEach(r => r.style.borderLeftColor = 'transparent')
                 }
-                return result
-            }
+                row.style.borderLeftColor = '#00a8ff'
+                
+                // Automatically select/highlight the first transform-config-element (index 0)
+                configData.activeTransformEditIndex = 0
+                row.dataset.transformConfig = JSON.stringify(configData)
+                renderMatrixGrid()
+    </replacement>
     
-            // strictly enforces unique structural random suffixes if missing in state reference
-            // ensures set_id and style_id are unique from each other and across all transform elements
-            if (!markerConfig.set_id) {
-                let setId = `set_${generateSplitId()}`
-                let styleId = `style_${generateSplitId()}`
-                // Ensure set_id and style_id are unique
-                while (setId === styleId) {
-                    styleId = `style_${generateSplitId()}`
+    ========================================
+    REVISION 2
+    ========================================
+    <target_file>./static/js/sidebar-ui.js</target_file>
+    
+    <original>
+    matrixBtn.onclick = (e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        configData.activeTransformEditIndex = i
+                        const tRow = matrixDiv.closest('.transforms-list-item')
+                        if (tRow) tRow.dataset.transformConfig = JSON.stringify(configData)
+                        renderMatrixGrid()
+                        if (rowsContainer && rowsContainer.children[i]) {
+                            rowsContainer.children[i].click()
+                        }
+                    }
+    </original>
+    
+    <replacement>
+    matrixBtn.onclick = (e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        configData.activeTransformEditIndex = i
+                        const tRow = matrixDiv.closest('.transforms-list-item')
+                        if (tRow) tRow.dataset.transformConfig = JSON.stringify(configData)
+                        renderMatrixGrid()
+                        if (tRow) {
+                            tRow.click()
+                        }
+                    }
+    </replacement>
+    
+    ========================================
+    REVISION 3
+    ========================================
+    <target_file>./static/js/sidebar-ui.js</target_file>
+    
+    <original>
+    timeBtn.onclick = (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const isHidden = timingDiv.style.display === 'none'
+                timingDiv.style.display = isHidden ? 'flex' : 'none'
+                // toggles outer block layout for the matrix wrapper
+                matrixDiv.style.display = isHidden ? 'block' : 'none'
+                timeBtn.style.color = isHidden ? configData.markerColor : '#aaa'
+                timeBtn.style.opacity = isHidden ? '1' : '0.6'
+                
+                const cfg = JSON.parse(row.dataset.transformConfig)
+                cfg.isTimingOpen = isHidden
+                row.dataset.transformConfig = JSON.stringify(cfg)
+                
+                if (typeof activeNode !== 'undefined' && activeNode) {
+                    let existingData = activeNode.getAttr('transformGroupData')
+                    const tKey = tRow.dataset.transformKey
+                    if (existingData && existingData[tKey]) {
+                        existingData[tKey].isTimingOpen = isHidden
+                        activeNode.setAttr('transformGroupData', existingData)
+                    }
                 }
-                markerConfig.set_id = setId
-                markerConfig.style_id = styleId
-            } else if (!markerConfig.style_id) {
-                let styleId = `style_${generateSplitId()}`
-                // Ensure style_id is unique from the existing set_id
-                while (markerConfig.set_id === styleId) {
-                    styleId = `style_${generateSplitId()}`
+    </original>
+    
+    <replacement>
+    timeBtn.onclick = (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                
+                // Automatically select the parent transform-row
+                row.click()
+    
+                const isHidden = timingDiv.style.display === 'none'
+                timingDiv.style.display = isHidden ? 'flex' : 'none'
+                // toggles outer block layout for the matrix wrapper
+                matrixDiv.style.display = isHidden ? 'block' : 'none'
+                timeBtn.style.color = isHidden ? configData.markerColor : '#aaa'
+                timeBtn.style.opacity = isHidden ? '1' : '0.6'
+                
+                const cfg = JSON.parse(row.dataset.transformConfig)
+                cfg.isTimingOpen = isHidden
+                row.dataset.transformConfig = JSON.stringify(cfg)
+                
+                if (typeof activeNode !== 'undefined' && activeNode) {
+                    let existingData = activeNode.getAttr('transformGroupData')
+                    const tKey = row.dataset.transformKey
+                    if (existingData && existingData[tKey]) {
+                        existingData[tKey].isTimingOpen = isHidden
+                        activeNode.setAttr('transformGroupData', existingData)
+                    }
                 }
-                markerConfig.style_id = styleId
-            }
     </replacement>
     
     
     ========================================
-    Model Engine:     gemini-2.5-flash-lite
-    Prompt Tokens:    136872
-    Output Tokens:    604
-    Total Session:    137476 tokens
-    Remaining Window: 862524 tokens (Max: 1000000)
+    Model Engine:     gemini-3.5-flash
+    Prompt Tokens:    137329
+    Output Tokens:    1281
+    Total Session:    138610 tokens
+    Remaining Window: 861390 tokens (Max: 1000000)
     ========================================
 
 ```
